@@ -254,9 +254,5 @@ OpenStreetMap for map tiles
 
 HTML5 Geolocation API
 
-<div align="center">
-Made with ❤️ for Educational Purposes
-
-⬆ Back to Top
-
-</div> ```
+                                                   Made with ❤️ for Educational Purposes
+                                                            ⬆ Back to Top
