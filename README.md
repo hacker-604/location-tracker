@@ -76,7 +76,7 @@ text
 
 ```bash
 # Clone the repository
-git clone https://github.com/yourusername/location-tracker.git
+git clone https://github.com/hacker-604/location-tracker.git
 cd location-tracker
 
 # Install ngrok (if not installed)
