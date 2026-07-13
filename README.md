@@ -253,6 +253,4 @@ ngrok for tunneling
 OpenStreetMap for map tiles
 
 HTML5 Geolocation API
-
-                                                   Made with ❤️ for Educational Purposes
-                                                            ⬆ Back to Top
+                                             Made with ❤️ for Educational Purposes                                             
