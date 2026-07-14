@@ -182,7 +182,7 @@ https://YOUR_NGROK_URL.ngrok-free.dev/delivery  # Delivery disguise
 - ⚖️ **Legal Compliance**: Follow all applicable laws
 - 🛡️ **Responsible Disclosure**: Report vulnerabilities ethically
 
-🔧 Troubleshooting
+### 🔧 Troubleshooting
 
 | ⚠️ Issue | ✅ Solution |
 |----------|------------|
@@ -220,9 +220,6 @@ https://YOUR_NGROK_URL.ngrok-free.dev/delivery  # Delivery disguise
 | **Device** | Chrome on Android |
 | **Source** | weather_app |
 | **Status** | ❌ User closed the page |
-
-
----
 
 ## 📚 Resources
 
