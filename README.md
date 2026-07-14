@@ -252,9 +252,8 @@ https://YOUR_NGROK_URL.ngrok-free.dev/delivery  # Delivery disguise
 | 🌐 **HTML5 Geolocation API** | Browser-based location capture |
 
 **Special thanks to all open-source contributors who make security research accessible!**
-                                             
+---                                      
 <div align="center">
----
   
 ### 🛡️ Stay Safe, Stay Ethical
 
