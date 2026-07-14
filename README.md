@@ -254,7 +254,8 @@ https://YOUR_NGROK_URL.ngrok-free.dev/delivery  # Delivery disguise
 **Special thanks to all open-source contributors who make security research accessible!**
                                              
 <div align="center">
-
+---
+  
 ### 🛡️ Stay Safe, Stay Ethical
 
 **Made with ❤️ for Security Education**
