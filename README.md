@@ -182,7 +182,7 @@ https://YOUR_NGROK_URL.ngrok-free.dev/delivery  # Delivery disguise
 - ⚖️ **Legal Compliance**: Follow all applicable laws
 - 🛡️ **Responsible Disclosure**: Report vulnerabilities ethically
 
-### 🔧 Troubleshooting
+## 🔧 Troubleshooting
 
 | ⚠️ Issue | ✅ Solution |
 |----------|------------|
@@ -230,7 +230,7 @@ https://YOUR_NGROK_URL.ngrok-free.dev/delivery  # Delivery disguise
 | 🐍 **Python HTTP Server** | [Python Docs](https://docs.python.org/3/library/http.server.html) |
 | 🗺️ **Leaflet.js Map Library** | [Leaflet Docs](https://leafletjs.com/) |
 
-🔒 Security Notice
+## 🔒 Security Notice
 
 > This project demonstrates techniques for **educational purposes only**. Understanding these methods helps:
 
